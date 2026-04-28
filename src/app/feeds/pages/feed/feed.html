@@ -1,0 +1,127 @@
+<div class="feed">
+
+  <header class="feed__header">
+    <h1>My Photos</h1>
+    <!-- <label class="upload-btn" [class.upload-btn--loading]="uploading()">
+      {{ uploading() ? 'Uploading...' : '+ Upload photos' }}
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        [disabled]="uploading()"
+        (change)="onFileSelected($event)"
+        hidden
+      />
+    </label> -->
+  </header>
+
+  @if (error()) {
+    <p class="feed__error">{{ error() }}</p>
+  }
+
+  @if (photos().length === 0 && !uploading()) {
+    <p class="feed__empty">No photos yet. Upload your first one!</p>
+  }
+
+  <div class="feed__grid">
+    @for (photo of photos(); track photo.id) {
+      <div class="feed__item" (click)="openModal(photo)">
+        <img [src]="photo.cloudinary_url" [alt]="photo.id" loading="lazy" />
+        <div class="feed__item-overlay"><span>View full size</span></div>
+      </div>
+    }
+  </div>
+
+</div>
+
+<!-- ── Lightbox ──────────────────────────────────────────────────────────── -->
+@if (focusedPhoto()) {
+  <div class="lightbox">
+
+    <!-- Toolbar -->
+    <div class="lightbox__toolbar" (click)="$event.stopPropagation()">
+
+      <button
+        class="lightbox__zoom-btn"
+        [class.lightbox__zoom-btn--active]="zoomed()"
+        (click)="toggleZoom()"
+      >
+        {{ zoomed() ? '1× Fit' : 'Zoom' }}
+      </button>
+
+      @if (zoomed()) {
+        <div class="lightbox__scale-control">
+          @if (editingScale()) {
+            <input
+              class="lightbox__scale-input"
+              type="number"
+              min="2"
+              max="10"
+              step="1"
+              [value]="zoomScale()"
+              autofocus
+              (keydown.enter)="onScaleInputCommit($event)"
+              (keydown.escape)="editingScale.set(false)"
+              (blur)="onScaleInputCommit($event)"
+              (click)="$event.stopPropagation()"
+            />
+          } @else {
+            <span
+              class="lightbox__scale-label"
+              title="Click to type a value"
+              (click)="editingScale.set(true); $event.stopPropagation()"
+            >{{ zoomScale() }}×</span>
+          }
+          <input
+            class="lightbox__scale-range"
+            type="range"
+            min="2"
+            max="10"
+            step="1"
+            [value]="zoomScale()"
+            (input)="onZoomScaleChange($event)"
+          />
+        </div>
+      }
+
+      <button class="lightbox__close-btn" (click)="closeModal()">✕</button>
+    </div>
+
+    <!-- Main image -->
+    <img
+      class="lightbox__img"
+      [class.lightbox__img--zoomed]="zoomed()"
+      [style.transform]="imgTransform()"
+      [src]="focusedPhoto()!.cloudinary_url"
+      [alt]="focusedPhoto()!.id"
+      draggable="false"
+      (load)="onLightboxImgLoad($event)"
+      (click)="$event.stopPropagation()"
+      (mousedown)="onImgMouseDown($event)"
+    />
+
+    <!-- Minimap -->
+    @if (minimapData(); as mm) {
+      <div
+        class="minimap"
+        [style.width.px]="mm.w"
+        [style.height.px]="mm.h"
+        (click)="$event.stopPropagation()"
+      >
+        <img
+          class="minimap__img"
+          [src]="focusedPhoto()!.cloudinary_url"
+          alt="minimap"
+        />
+        <div
+          class="minimap__viewport"
+          [style.left.px]="mm.rectLeft"
+          [style.top.px]="mm.rectTop"
+          [style.width.px]="mm.rectWidth"
+          [style.height.px]="mm.rectHeight"
+        ></div>
+      </div>
+    }
+
+  </div>
+}
